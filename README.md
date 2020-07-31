@@ -1,1 +1,1 @@
-# TimeSeriesInterface
+# TimeSeriesInterface.jl
