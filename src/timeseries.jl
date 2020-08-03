@@ -49,8 +49,11 @@ values(ts::TimeSeries) = ts.values
 # Define some nice functions like + - * and /
 
 # auxiliar functions
+function verify_if_ts_are_equal(ts1::TimeSeries{T}, ts2::TimeSeries{T}) where T
+    return ts1.name == ts2.name && ts1.timestamps == ts2.timestamps && ts1.vals == ts2.vals
+end
 
-function create_new_name(time_series_vector, string)
+function create_ts_name_from_ts_vector(time_series_vector, string)
     num_of_time_series = length(time_series_vector)
 
     new_name = ""
@@ -65,10 +68,10 @@ function create_new_name(time_series_vector, string)
     return new_name
 end
 
-function create_new_timestamps(time_series_vector)
+function union_timestamps(time_series_vector)
     num_of_time_series = length(time_series_vector)
     
-    new_timestamps = []
+    new_timestamps = DateTime[]
     
     for n = 1:num_of_time_series
         new_timestamps = vcat(new_timestamps, time_series_vector[n].timestamps)
@@ -79,13 +82,13 @@ end
 
 # + functions
 
-function create_new_vals_sum(time_series_vector, new_timestamps)
+function sum_vals_of_ts(time_series_vector::Vector{TimeSeries{T}}, new_timestamps) where T
     num_of_time_series = length(time_series_vector)
 
-    new_vals = []
+    new_vals = T[]
     
     for tstamp in new_timestamps
-        tstamp_val = []
+        tstamp_val = T[]
 
         for tserie in time_series_vector
 
@@ -105,9 +108,9 @@ end
 
 function sum_timeseries(time_series_vector)
 
-    new_names      = create_new_name(time_series_vector,"+")
-    new_timestamps = Vector{DateTime}(create_new_timestamps(time_series_vector))
-    new_vals       = Vector{Float64}(create_new_vals_sum(time_series_vector, new_timestamps))
+    new_names      = create_ts_name_from_ts_vector(time_series_vector,"+")
+    new_timestamps = union_timestamps(time_series_vector)
+    new_vals       = sum_vals_of_ts(time_series_vector, new_timestamps)
 
     return TimeSeries(new_names, new_timestamps, new_vals)
 end
@@ -127,13 +130,13 @@ end
 
 # - functions
 
-function create_new_vals_subtraction(time_series_vector, new_timestamps)
+function subtract_vals_of_ts(time_series_vector::Vector{TimeSeries{T}}, new_timestamps) where T
     num_of_time_series = length(time_series_vector)
 
-    new_vals = []
+    new_vals = T[]
     
     for tstamp in new_timestamps
-        tstamp_val = []
+        tstamp_val = T[]
 
         for num_ts = 1:num_of_time_series
             
@@ -161,15 +164,15 @@ function create_new_vals_subtraction(time_series_vector, new_timestamps)
     return new_vals
 end
 
-function subtract_timeseries(time_series_vector)
+function subtracts_ts(time_series_vector)
     if length(time_series_vector) == 1
         new_names      = "- "*time_series_vector[1].name
         new_timestamps = time_series_vector[1].timestamps
         new_vals       = - time_series_vector[1].vals
     else
-        new_names      = create_new_name(time_series_vector, "-")
-        new_timestamps = Vector{DateTime}(create_new_timestamps(time_series_vector))
-        new_vals       = Vector{Float64}(create_new_vals_subtraction(time_series_vector, new_timestamps))
+        new_names      = create_ts_name_from_ts_vector(time_series_vector, "-")
+        new_timestamps = union_timestamps(time_series_vector)
+        new_vals       = subtract_vals_of_ts(time_series_vector, new_timestamps)
     end
 
     return TimeSeries(new_names, new_timestamps, new_vals)
@@ -185,19 +188,19 @@ function (-)(ts1::TimeSeries, ts2::TimeSeries...)
         push!(time_series_vector, ts2[n])
     end
 
-    return subtract_timeseries(time_series_vector)
+    return subtracts_ts(time_series_vector)
 end
 
 
 # * functions
 
-function create_new_vals_product(time_series_vector, new_timestamps)
+function multiply_vals_of_ts(time_series_vector::Vector{TimeSeries{T}}, new_timestamps) where T
     num_of_time_series = length(time_series_vector)
 
-    new_vals = []
+    new_vals = T[]
     
     for tstamp in new_timestamps
-        tstamp_val = []
+        tstamp_val = T[]
 
         for tserie in time_series_vector
 
@@ -215,10 +218,10 @@ function create_new_vals_product(time_series_vector, new_timestamps)
     return new_vals
 end
 
-function product_timeseries(time_series_vector)
-    new_names      = create_new_name(time_series_vector, "*")
-    new_timestamps = Vector{DateTime}(create_new_timestamps(time_series_vector))
-    new_vals       = Vector{Float64}(create_new_vals_product(time_series_vector, new_timestamps))
+function product_ts(time_series_vector)
+    new_names      = create_ts_name_from_ts_vector(time_series_vector, "*")
+    new_timestamps = union_timestamps(time_series_vector)
+    new_vals       = multiply_vals_of_ts(time_series_vector, new_timestamps)
 
     return TimeSeries(new_names, new_timestamps, new_vals)
 end
@@ -233,16 +236,11 @@ function (*)(ts1::TimeSeries, ts2::TimeSeries...)
         push!(time_series_vector, ts2[n])
     end
 
-    return product_timeseries(time_series_vector)
+    return product_ts(time_series_vector)
 end
 
 
 # Define a normalize function and some other useful
 
 # Define some aggregations and disaggregation methods
-
-
-ts1 = TimeSeries("Serie 1", [DateTime(i) for i = 1:10], [i+0.0 for i = 1:10])
-ts2 = TimeSeries("Serie 2", [DateTime(i) for i = 11:20], [i+0.0 for i = 11:20])
-ts3 = TimeSeries("Serie 3", [DateTime(i) for i = 1:20], [i+0.0 for i = 1:20])
 
