@@ -1,5 +1,7 @@
 module TimeSeriesInterface
 
+import Base: +, - , *
+
 using Dates
 
 include("timeseries.jl")
