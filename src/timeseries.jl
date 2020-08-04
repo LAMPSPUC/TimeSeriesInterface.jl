@@ -2,7 +2,6 @@ export TimeSeries
 
 import Base: +, - , *
 
-using Dates
 """
     TimeSeries
 
