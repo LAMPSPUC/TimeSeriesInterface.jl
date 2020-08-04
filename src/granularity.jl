@@ -1,4 +1,10 @@
-function hourly_to_monthly(time_series; agg_func::mean)
+export hourly_to_monthly
+export monthly_to_hourly
+
+"""
+Function to convert an hourly timeseries to a monthly timeseries, using an aggregate function.
+"""
+function hourly_to_monthly(time_series::TimeSeries; agg_func::Function=mean)
     name = time_series.name
     first = DateTime(year(time_series.timestamps[1]), month(time_series.timestamps[1]), 1)
     last = DateTime(year(time_series.timestamps[end]), month(time_series.timestamps[end]), 1)
@@ -10,7 +16,10 @@ function hourly_to_monthly(time_series; agg_func::mean)
     return TimeSeries(name, timestamps, vals)
 end
 
-function monthly_to_hourly(time_series)
+"""
+Function to convert a monthly timeseries to an hourly timeseries.
+"""
+function monthly_to_hourly(time_series::TimeSeries)
     name = time_series.name
     first = DateTime(year(time_series.timestamps[1]), month(time_series.timestamps[1]), 1)
     last = DateTime(year(time_series.timestamps[end]), month(time_series.timestamps[end]), 1) + Month(1) - Hour(1)
