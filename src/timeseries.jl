@@ -1,7 +1,5 @@
 export TimeSeries
 
-import Base: +, - , *
-
 """
     TimeSeries
 
