@@ -4,5 +4,5 @@ using Dates
 using Statistics
 
 include("timeseries.jl")
-include("test/tests_agg_disagg.jl")
-include("test/tests_granularity.jl")
+include("timeseries.jl")
+include("tests_agg_disagg.jl")
