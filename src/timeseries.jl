@@ -1,4 +1,6 @@
 export TimeSeries
+export hourly_to_monthly
+export monthly_to_hourly
 
 """
     TimeSeries
@@ -241,3 +243,32 @@ end
 
 # Define some aggregations and disaggregation methods
 
+"""
+Function to convert an hourly timeseries to a monthly timeseries, using an aggregate function.
+"""
+function hourly_to_monthly(time_series::TimeSeries; agg_func::Function=mean)
+    name = time_series.name
+    timestamps = map(x -> DateTime(x...), unique(yearmonth.(time_series.timestamps)))
+    vals = Vector{Float64}(undef, length(timestamps))
+    for i = 1:length(timestamps)
+        vals[i] = agg_func(time_series.vals[(time_series.timestamps .>= timestamps[i]) .& (time_series.timestamps .< (timestamps[i] + Month(1)))])
+    end
+    return TimeSeries(name, timestamps, vals)
+end
+
+"""
+Function to convert a monthly timeseries to an hourly timeseries.
+"""
+function monthly_to_hourly(time_series::TimeSeries)
+    name = time_series.name
+    timestamps = Vector{DateTime}(undef, 0)
+    for m in yearmonth.(time_series.timestamps)
+        append!(timestamps, collect(firstdayofmonth(DateTime(m...)):Hour(1):(lastdayofmonth(DateTime(m...))+Hour(23))))
+    end
+
+    vals = Vector{Float64}(undef, length(timestamps))
+    for i = 1:length(time_series.timestamps)
+        vals[(timestamps .>= time_series.timestamps[i]) .& (timestamps .< (time_series.timestamps[i]+Month(1)))] .= time_series.vals[i]
+    end
+    return TimeSeries(name, timestamps, vals)
+end

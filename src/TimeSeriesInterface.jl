@@ -2,10 +2,9 @@ module TimeSeriesInterface
 
 import Base: +, - , *
 
-using Dates
+using Dates, Statistics
 
 include("timeseries.jl")
 include("FileFormats/FileFormats.jl")
-include("granularity.jl")
 
 end
