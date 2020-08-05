@@ -6,3 +6,4 @@ using Statistics
 include("timeseries.jl")
 include("timeseries.jl")
 include("tests_agg_disagg.jl")
+include("forecast.jl")
