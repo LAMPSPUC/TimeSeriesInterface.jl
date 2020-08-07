@@ -1,6 +1,5 @@
 name = "TimeSeriesInterface"
 uuid = "b6905eaa-d2af-11ea-0aca-2dc76a442461"
-authors = ["Guilherme Bodin <guilherme.b.moraes@gmail.com>"]
 version = "0.1.0"
 
 [deps]
