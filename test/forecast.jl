@@ -37,6 +37,36 @@
         forecast   = [1; 1]
         @test_throws ErrorException PointForecast("teste", timestamps, forecast)
     end
+    @testset "forecast_metrics" begin
+        timestamps     = collect(DateTime(2000):Hour(1):DateTime(2000, 2, 1))
+        vals           = rand(length(timestamps))
+        forecast       = rand(length(timestamps))
+        real_ts        = TimeSeries("teste", timestamps, vals)
+        point_forecast = PointForecast("teste", timestamps, forecast)
+        perfect_forecast = PointForecast("teste", timestamps, vals)
+
+        point_forecast_metrics = forecast_metrics(point_forecast, real_ts)
+        @test isa(point_forecast_metrics, PointForecastMetrics)
+        @test all(point_forecast_metrics.mae .> 0)
+        @test all(point_forecast_metrics.mape .> 0)
+
+        perfect_forecast_metrics = forecast_metrics(perfect_forecast, real_ts)
+        @test all(perfect_forecast_metrics.me .== 0)
+        @test all(perfect_forecast_metrics.mae .== 0)
+        @test all(perfect_forecast_metrics.mape .== 0)
+
+        real_ts.vals[3] = 0
+        warn_msg = "The real observations have values too close to zero. This makes the MAPE " *
+                   "impractical, a vector of NaNs will be returned."
+                        
+        @test_logs (:warn, warn_msg) forecast_metrics(point_forecast, real_ts)
+        
+        point_forecast_metrics = forecast_metrics(point_forecast, real_ts)
+        @test all(point_forecast_metrics.mape .=== NaN)
+
+        point_forecast = PointForecast("teste", timestamps[1:end-1], forecast[1:end-1])
+        @test_throws DimensionMismatch forecast_metrics(point_forecast, real_ts)
+    end
 end
 
 @testset "ScenariosForecast" begin
@@ -106,6 +136,30 @@ end
         quantiles               = rand(length(timestamps), 2)
         @test_throws ErrorException ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
+    end
+    @testset "forecast_metrics" begin
+        timestamps              = collect(DateTime(2000):Hour(1):DateTime(2000, 2, 1))
+        scenarios               = vcat([collect(1.0:100)' for i in 1:length(timestamps)]...)
+        quantiles_probabilities = [0.05; 0.95]
+        quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
+        scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
+
+        vals    = 0.9*ones(length(timestamps))
+        real_ts = TimeSeries("teste", timestamps, vals)
+        scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
+        @test scen_forecast_metrics.probabilistic_calibration[0.025] == 1
+        @test scen_forecast_metrics.probabilistic_calibration[0.975] == 1
+
+        vals    = 50*ones(length(timestamps))
+        real_ts = TimeSeries("teste", timestamps, vals)
+        scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
+        @test scen_forecast_metrics.probabilistic_calibration[0.025] == 0
+        @test scen_forecast_metrics.probabilistic_calibration[0.475] == 0
+        @test scen_forecast_metrics.probabilistic_calibration[0.525] == 1
+        @test scen_forecast_metrics.probabilistic_calibration[0.975] == 1
+
+        real_ts = TimeSeries("teste", timestamps[1:end-1], vals[1:end-1])
+        @test_throws DimensionMismatch forecast_metrics(scenarios_forecast, real_ts)
     end
 end
 

@@ -236,7 +236,14 @@ function (*)(ts1::TimeSeries, ts2::TimeSeries...)
     return product_ts(time_series_vector)
 end
 
-
+function observations_close_to_zero(ts::TimeSeries; zero_threshold = 1e-8)
+    for v in ts.vals
+        if (v <= zero_threshold) && (v >= -zero_threshold)
+            return true
+        end
+    end
+    return false
+end
 # Define a normalize function and some other useful
 
 # Define some aggregations and disaggregation methods
