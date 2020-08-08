@@ -136,6 +136,7 @@ end
 ## Evaluation Metrics for Point Forecast
 struct ScenariosForecastMetrics{T <: Real}
     probabilistic_calibration::Vector{Dict{Float64, Bool}}
+    interval_width::Vector{Dict{Float64, Float64}}
 end
 
 function forecast_metrics(scenarios_forecast::ScenariosForecast{T}, 
@@ -146,8 +147,10 @@ function forecast_metrics(scenarios_forecast::ScenariosForecast{T},
     end
 
     probabilistic_calibration = evaluate_probabilistic_calibration(scenarios_forecast.scenarios, real_ts.vals)
+    interval_width            = evaluate_interval_width(scenarios_forecast.scenarios)
     return ScenariosForecastMetrics{T}(
-        probabilistic_calibration
+        probabilistic_calibration,
+        interval_width
     )
 end
 
@@ -163,13 +166,38 @@ function evaluate_probabilistic_calibration(scenarios::Matrix{T},
     quantiles = get_quantiles(quantile_probs, scenarios)
     probabilistic_calibration = Vector{Dict}(undef, size(scenarios, 1))
     for k in 1:size(scenarios, 1)
-        probabilistic_calibration[k] = Dict{Float64, Float64}()
+        probabilistic_calibration[k] = Dict{Float64, Bool}()
         for (i, q) in enumerate(quantile_probs)
             probabilistic_calibration[k][q] = hitted_below_quantile(vals[k], quantiles[k, i])
         end
     end
     return probabilistic_calibration
 end
+
+upper_and_lower_quantiles_probs_of_interval(interval_prob::Float64) = [(1-interval_prob)/2, 1 - (1-interval_prob)/2]
+
+function get_upper_and_lower_quantiles(intervals_probs::Vector{Float64}, scenarios::Matrix{T}) where T
+    upper_lower_quantiles_probs = vcat(upper_and_lower_quantiles_probs_of_interval.(intervals_probs)'...)
+    upper_quantiles = get_quantiles(upper_lower_quantiles_probs[:,2], scenarios)
+    lower_quantiles = get_quantiles(upper_lower_quantiles_probs[:,1], scenarios)
+    return upper_quantiles, lower_quantiles
+end
+
+width_of_interval(upper_quantile::T, lower_quantile::T) where T = upper_quantile - lower_quantile
+
+function evaluate_interval_width(scenarios::Matrix{T}) where T
+    intervals_probs = collect(0.05:0.05:0.95)
+    interval_width  = Vector{Dict}(undef, size(scenarios, 1))
+    upper_quantiles, lower_quantiles = get_upper_and_lower_quantiles(intervals_probs, scenarios)
+    for k in 1:size(scenarios, 1)
+        interval_width[k] = Dict{Float64, Float64}()
+        for (i, q) in enumerate(intervals_probs)
+            interval_width[k][q] = width_of_interval(upper_quantiles[k, i], lower_quantiles[k, i])
+        end
+    end
+    return interval_width
+end
+
 
 """
     QuantilesForecast
