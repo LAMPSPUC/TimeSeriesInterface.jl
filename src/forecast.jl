@@ -134,11 +134,23 @@ function ScenariosForecast(name::String,
 end
 
 ## Evaluation Metrics for Point Forecast
-struct ScenariosForecastMetrics{T <: Real}
+struct ScenariosForecastMetrics
+    # A Vector of dictionaaries for each lead time 
+    # where each key is a quantile and each value 
+    # is wheather the observation is smaller than 
+    # the quantile.
     probabilistic_calibration::Vector{Dict{Float64, Bool}}
+    # A Vector of dictionaaries for each lead time
+    # where each key is the confidence interval
+    # and each value is the width of the interval in the 
+    # unit of the dependent variable.
+    interval_width::Vector{Dict{Float64, Float64}}
+    # A Vector that contains the crps score for each 
+    # lead time 
+    crps::Vector{Float64}
 end
 
-function forecast_metrics(scenarios_forecast::ScenariosForecast{T}, 
+function forecast_metrics(scenarios_forecast::ScenariosForecast, 
                           real_ts::TimeSeries{T}) where T
 
     if size(scenarios_forecast.scenarios, 1) != length(real_ts.vals)
@@ -146,16 +158,23 @@ function forecast_metrics(scenarios_forecast::ScenariosForecast{T},
     end
 
     probabilistic_calibration = evaluate_probabilistic_calibration(scenarios_forecast.scenarios, real_ts.vals)
-    return ScenariosForecastMetrics{T}(
-        probabilistic_calibration
+    interval_width            = evaluate_interval_width(scenarios_forecast.scenarios)
+    crps                      = evaluate_crps(scenarios_forecast.scenarios, real_ts.vals)
+
+    return ScenariosForecastMetrics(
+        probabilistic_calibration,
+        interval_width,
+        crps
     )
 end
 
-hitted_below_quantile(val::T, quantile::T) where T = val <= quantile
 function get_quantiles(quantile_probs::Vector{T}, scenarios::Matrix{T}) where T
     quantiles = mapslices(x -> quantile(x, quantile_probs), scenarios; dims = 2)
     return quantiles
 end
+
+## probabilistic_calibration functions
+hitted_below_quantile(val::T, quantile::T) where T = val <= quantile
 
 function evaluate_probabilistic_calibration(scenarios::Matrix{T},
                                             vals::Vector{T}) where T
@@ -163,13 +182,58 @@ function evaluate_probabilistic_calibration(scenarios::Matrix{T},
     quantiles = get_quantiles(quantile_probs, scenarios)
     probabilistic_calibration = Vector{Dict}(undef, size(scenarios, 1))
     for k in 1:size(scenarios, 1)
-        probabilistic_calibration[k] = Dict{Float64, Float64}()
+        probabilistic_calibration[k] = Dict{Float64, Bool}()
         for (i, q) in enumerate(quantile_probs)
             probabilistic_calibration[k][q] = hitted_below_quantile(vals[k], quantiles[k, i])
         end
     end
     return probabilistic_calibration
 end
+
+lower_quantile(interval_prob::T) where T = (1 - interval_prob)/2
+upper_quantile(interval_prob::T) where T = (1 + interval_prob)/2
+
+width_of_interval(upper_quantile::T, lower_quantile::T) where T = upper_quantile - lower_quantile
+
+function evaluate_interval_width(scenarios::Matrix{T}) where T
+    intervals_probs = collect(0.05:0.05:0.95)
+    interval_width  = Vector{Dict}(undef, size(scenarios, 1))
+    upper_quantiles = get_quantiles(upper_quantile.(intervals_probs), scenarios)
+    lower_quantiles = get_quantiles(lower_quantile.(intervals_probs), scenarios)
+    for k in 1:size(scenarios, 1)
+        interval_width[k] = Dict{Float64, Float64}()
+        for (i, q) in enumerate(intervals_probs)
+            interval_width[k][q] = width_of_interval(upper_quantiles[k, i], lower_quantiles[k, i])
+        end
+    end
+    return interval_width
+end
+
+# crps functions
+discrete_crps_indicator_function(val::T, z::T) where T = val < z
+
+function crps(scenarios::Vector{T}, val::T) where T 
+    sorted_scenarios = sort(scenarios)
+    m = length(scenarios)
+    crps_score = zero(T)
+
+    for i in 1:m
+        crps_score += (sorted_scenarios[i] - val) * (m * discrete_crps_indicator_function(val, sorted_scenarios[i]) - i + 0.5)
+    end
+
+    return (2/m^2) * crps_score
+end
+
+function evaluate_crps(scenarios::Matrix{T}, vals::Vector{T}) where T
+    crps_scores = Vector{Float64}(undef, length(vals))
+
+    for k = 1:length(vals)
+        crps_scores[k] = crps(scenarios[k, :], vals[k])
+    end
+
+    return crps_scores
+end
+
 
 """
     QuantilesForecast

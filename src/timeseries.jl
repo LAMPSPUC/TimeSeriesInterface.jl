@@ -52,6 +52,8 @@ function verify_if_ts_are_equal(ts1::TimeSeries{T}, ts2::TimeSeries{T}) where T
     return ts1.name == ts2.name && ts1.timestamps == ts2.timestamps && ts1.vals == ts2.vals
 end
 
+
+
 function create_ts_name_from_ts_vector(time_series_vector, string)
     num_of_time_series = length(time_series_vector)
 
