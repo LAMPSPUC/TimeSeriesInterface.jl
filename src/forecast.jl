@@ -134,14 +134,22 @@ function ScenariosForecast(name::String,
 end
 
 ## Evaluation Metrics for Point Forecast
-struct ScenariosForecastMetrics{T <: Real}
+struct ScenariosForecastMetrics
+    # A Vector of dictionaaries for each lead time 
+    # where each key is a quantile and each value 
+    # is wheather the observation is smaller than 
+    # the quantile.
     probabilistic_calibration::Vector{Dict{Float64, Bool}}
+    # A Vector of dictionaaries for each lead time
+    # where each key is the confidence interval
+    # and each value is the width of the interval in the 
+    # unit of the dependent variable.
     interval_width::Vector{Dict{Float64, Float64}}
+    # 
     crps::Vector{Float64}
-    percentage_crps::Vector{Float64}
 end
 
-function forecast_metrics(scenarios_forecast::ScenariosForecast{T}, 
+function forecast_metrics(scenarios_forecast::ScenariosForecast, 
                           real_ts::TimeSeries{T}) where T
 
     if size(scenarios_forecast.scenarios, 1) != length(real_ts.vals)
@@ -151,13 +159,11 @@ function forecast_metrics(scenarios_forecast::ScenariosForecast{T},
     probabilistic_calibration = evaluate_probabilistic_calibration(scenarios_forecast.scenarios, real_ts.vals)
     interval_width            = evaluate_interval_width(scenarios_forecast.scenarios)
     crps                      = evaluate_crps(scenarios_forecast.scenarios, real_ts.vals)
-    percentage_crps           = evaluate_percentage_crps(scenarios_forecast.scenarios, real_ts.vals)
 
-    return ScenariosForecastMetrics{T}(
+    return ScenariosForecastMetrics(
         probabilistic_calibration,
         interval_width,
-        crps,
-        percentage_crps
+        crps
     )
 end
 
@@ -183,22 +189,16 @@ function evaluate_probabilistic_calibration(scenarios::Matrix{T},
     return probabilistic_calibration
 end
 
-upper_and_lower_quantiles_probs_of_interval(interval_prob::Float64) = [(1-interval_prob)/2, 1 - (1-interval_prob)/2]
+lower_quantile(interval_prob::T) where T = (1 - interval_prob)/2
+upper_quantile(interval_prob::T) where T = (1 + interval_prob)/2
 
-function get_upper_and_lower_quantiles(intervals_probs::Vector{Float64}, scenarios::Matrix{T}) where T
-    upper_lower_quantiles_probs = vcat(upper_and_lower_quantiles_probs_of_interval.(intervals_probs)'...)
-    upper_quantiles = get_quantiles(upper_lower_quantiles_probs[:,2], scenarios)
-    lower_quantiles = get_quantiles(upper_lower_quantiles_probs[:,1], scenarios)
-    return upper_quantiles, lower_quantiles
-end
-
-#interval_width functions
 width_of_interval(upper_quantile::T, lower_quantile::T) where T = upper_quantile - lower_quantile
 
 function evaluate_interval_width(scenarios::Matrix{T}) where T
     intervals_probs = collect(0.05:0.05:0.95)
     interval_width  = Vector{Dict}(undef, size(scenarios, 1))
-    upper_quantiles, lower_quantiles = get_upper_and_lower_quantiles(intervals_probs, scenarios)
+    upper_quantiles = get_quantiles(upper_quantile.(intervals_probs), scenarios)
+    lower_quantiles = get_quantiles(lower_quantile.(intervals_probs), scenarios)
     for k in 1:size(scenarios, 1)
         interval_width[k] = Dict{Float64, Float64}()
         for (i, q) in enumerate(intervals_probs)
@@ -209,40 +209,30 @@ function evaluate_interval_width(scenarios::Matrix{T}) where T
 end
 
 # crps functions
-discrete_crps_indicator_function(val::T, z::T) where T = Float64(val < z)
+discrete_crps_indicator_function(val::T, z::T) where T = val < z
 
 function crps(scenarios::Vector{T}, val::T) where T 
+    sorted_scenarios = sort(scenarios)
     m = length(scenarios)
-    
-    return (1/m)*sum(abs(scenarios[i] - val) for i = 1:m) - (1/(2*m^2))*sum(sum(abs(scenarios[i]-scenarios[j]) for i = 1:m) for j = 1:m)
-end
+    crps_score = zero(T)
 
-function crps_fast(scenarios::Vector{T}, val::T) where T 
-    scenarios = sort(scenarios)
-    m = length(scenarios)
-    
-    return (2/m^2)*sum((scenarios[i] - val)*(m*discrete_crps_indicator_function(val, scenarios[i]) - i + 1/2) for i = 1:m)
+    for i in 1:m
+        crps_score += (sorted_scenarios[i] - val) * (m * discrete_crps_indicator_function(val, sorted_scenarios[i]) - i + 0.5)
+    end
+
+    return (2/m^2) * crps_score
 end
 
 function evaluate_crps(scenarios::Matrix{T}, vals::Vector{T}) where T
     crps_scores = Vector{Float64}(undef, length(vals))
 
     for k = 1:length(vals)
-        crps_scores[k] = abs(crps_fast(scenarios[k,:], vals[k]))
+        crps_scores[k] = crps(scenarios[k, :], vals[k])
     end
 
     return crps_scores
 end
 
-function evaluate_percentage_crps(scenarios::Matrix{T}, vals::Vector{T}) where T
-    percentage_crps_scores = Vector{Float64}(undef, length(vals))
-
-    for k = 1:length(vals)
-        percentage_crps_scores[k] = abs(crps_fast(scenarios[k,:], vals[k])/vals[k])
-    end
-
-    return percentage_crps_scores
-end
 
 """
     QuantilesForecast
@@ -291,3 +281,5 @@ function QuantilesForecast(name::String,
                              quantiles_probabilities,
                              quantiles)
 end
+
+
