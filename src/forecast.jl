@@ -145,7 +145,8 @@ struct ScenariosForecastMetrics
     # and each value is the width of the interval in the 
     # unit of the dependent variable.
     interval_width::Vector{Dict{Float64, Float64}}
-    # 
+    # A Vector that contains the crps score for each 
+    # lead time 
     crps::Vector{Float64}
 end
 
@@ -281,5 +282,3 @@ function QuantilesForecast(name::String,
                              quantiles_probabilities,
                              quantiles)
 end
-
-
