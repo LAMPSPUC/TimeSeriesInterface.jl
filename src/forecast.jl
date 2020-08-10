@@ -161,11 +161,13 @@ function forecast_metrics(scenarios_forecast::ScenariosForecast{T},
     )
 end
 
-hitted_below_quantile(val::T, quantile::T) where T = val <= quantile
 function get_quantiles(quantile_probs::Vector{T}, scenarios::Matrix{T}) where T
     quantiles = mapslices(x -> quantile(x, quantile_probs), scenarios; dims = 2)
     return quantiles
 end
+
+## probabilistic_calibration functions
+hitted_below_quantile(val::T, quantile::T) where T = val <= quantile
 
 function evaluate_probabilistic_calibration(scenarios::Matrix{T},
                                             vals::Vector{T}) where T
@@ -190,6 +192,7 @@ function get_upper_and_lower_quantiles(intervals_probs::Vector{Float64}, scenari
     return upper_quantiles, lower_quantiles
 end
 
+#interval_width functions
 width_of_interval(upper_quantile::T, lower_quantile::T) where T = upper_quantile - lower_quantile
 
 function evaluate_interval_width(scenarios::Matrix{T}) where T
@@ -205,6 +208,7 @@ function evaluate_interval_width(scenarios::Matrix{T}) where T
     return interval_width
 end
 
+# crps functions
 discrete_crps_indicator_function(val::T, z::T) where T = Float64(val < z)
 
 function crps(scenarios::Vector{T}, val::T) where T 
