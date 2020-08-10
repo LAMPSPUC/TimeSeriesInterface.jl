@@ -136,64 +136,113 @@ end
 
     end
     @testset "forecast_metrics" begin
-        # probabilistic_calibration
-        timestamps              = collect(DateTime(2000):Hour(1):DateTime(2000, 2, 1))
-        scenarios               = vcat([collect(1.0:100)' for i in 1:length(timestamps)]...)
-        quantiles_probabilities = [0.05; 0.95]
-        quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
-        scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
+        @testset "probabilistic_calibration" begin
+            # probabilistic_calibration
+            timestamps              = collect(DateTime(2000):Hour(1):DateTime(2000, 2, 1))
+            scenarios               = vcat([collect(1.0:100)' for i in 1:length(timestamps)]...)
+            quantiles_probabilities = [0.05; 0.95]
+            quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
-        vals    = 0.9*ones(length(timestamps))
-        real_ts = TimeSeries("teste", timestamps, vals)
-        scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
-        @test scen_forecast_metrics.probabilistic_calibration[1][0.025] == true
-        @test scen_forecast_metrics.probabilistic_calibration[1][0.975] == true
-        @test scen_forecast_metrics.probabilistic_calibration[end][0.025] == true
-        @test scen_forecast_metrics.probabilistic_calibration[end][0.975] == true
+            vals    = 0.9*ones(length(timestamps))
+            real_ts = TimeSeries("teste", timestamps, vals)
+            scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
+            @test scen_forecast_metrics.probabilistic_calibration[1][0.025] == true
+            @test scen_forecast_metrics.probabilistic_calibration[1][0.975] == true
+            @test scen_forecast_metrics.probabilistic_calibration[end][0.025] == true
+            @test scen_forecast_metrics.probabilistic_calibration[end][0.975] == true
 
-        vals    = 50*ones(length(timestamps))
-        real_ts = TimeSeries("teste", timestamps, vals)
-        scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
-        @test scen_forecast_metrics.probabilistic_calibration[1][0.025] == false
-        @test scen_forecast_metrics.probabilistic_calibration[1][0.475] == false
-        @test scen_forecast_metrics.probabilistic_calibration[1][0.525] == true
-        @test scen_forecast_metrics.probabilistic_calibration[1][0.975] == true
-        @test scen_forecast_metrics.probabilistic_calibration[end][0.025] == false
-        @test scen_forecast_metrics.probabilistic_calibration[end][0.475] == false
-        @test scen_forecast_metrics.probabilistic_calibration[end][0.525] == true
-        @test scen_forecast_metrics.probabilistic_calibration[end][0.975] == true
+            vals    = 50*ones(length(timestamps))
+            real_ts = TimeSeries("teste", timestamps, vals)
+            scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
+            @test scen_forecast_metrics.probabilistic_calibration[1][0.025] == false
+            @test scen_forecast_metrics.probabilistic_calibration[1][0.475] == false
+            @test scen_forecast_metrics.probabilistic_calibration[1][0.525] == true
+            @test scen_forecast_metrics.probabilistic_calibration[1][0.975] == true
+            @test scen_forecast_metrics.probabilistic_calibration[end][0.025] == false
+            @test scen_forecast_metrics.probabilistic_calibration[end][0.475] == false
+            @test scen_forecast_metrics.probabilistic_calibration[end][0.525] == true
+            @test scen_forecast_metrics.probabilistic_calibration[end][0.975] == true
 
-        real_ts = TimeSeries("teste", timestamps[1:end-1], vals[1:end-1])
-        @test_throws DimensionMismatch forecast_metrics(scenarios_forecast, real_ts)
+            real_ts = TimeSeries("teste", timestamps[1:end-1], vals[1:end-1])
+            @test_throws DimensionMismatch forecast_metrics(scenarios_forecast, real_ts)
+        end
 
-        # interval_width
+        @testset "interval_width" begin
+            # interval_width
 
-        timestamps              = collect(DateTime(2000):Hour(1):DateTime(2000, 2, 1))
-        scenarios               = vcat([collect(0.0:100)' for i in 1:length(timestamps)]...)
-        quantiles_probabilities = [0.05; 0.95]
-        quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
-        scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities,        quantiles)
+            timestamps              = collect(DateTime(2000):Hour(1):DateTime(2000, 2, 1))
+            scenarios               = vcat([collect(0.0:100)' for i in 1:length(timestamps)]...)
+            quantiles_probabilities = [0.05; 0.95]
+            quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities,        quantiles)
 
-    
-        vals    = 0.9*ones(length(timestamps))
-        real_ts = TimeSeries("teste", timestamps, vals)
-        scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
-
-        @test scen_forecast_metrics.interval_width[1][0.95] == 95
-        @test scen_forecast_metrics.interval_width[1][0.85] == 85
-        @test scen_forecast_metrics.interval_width[1][0.75] == 75
-        @test scen_forecast_metrics.interval_width[1][0.05] == 5
         
+            vals    = 0.9*ones(length(timestamps))
+            real_ts = TimeSeries("teste", timestamps, vals)
+            scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
 
-        scenarios_forecast      = ScenariosForecast("teste", timestamps, 1 .+ 0*scenarios, quantiles_probabilities, 
-        quantiles)
+            @test scen_forecast_metrics.interval_width[1][0.95] == 95
+            @test scen_forecast_metrics.interval_width[1][0.85] == 85
+            @test scen_forecast_metrics.interval_width[1][0.75] == 75
+            @test scen_forecast_metrics.interval_width[1][0.05] == 5
+            
+
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, 1 .+ 0*scenarios, quantiles_probabilities, 
+            quantiles)
+            
+            scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
+
+            @test scen_forecast_metrics.interval_width[1][0.95] == 0
+            @test scen_forecast_metrics.interval_width[1][0.85] == 0
+            @test scen_forecast_metrics.interval_width[1][0.75] == 0
+            @test scen_forecast_metrics.interval_width[1][0.05] == 0
+        end
+
+        @testset "crps" begin
+            # crps
+
+            timestamps              = collect(DateTime(2000):Hour(1):DateTime(2000, 2, 1))
+            scenarios               = vcat([collect(1.0:10)' for i in 1:length(timestamps)]...)
+            quantiles_probabilities = [0.05; 0.95]
+            quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities,        quantiles)
+
         
-        scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
+            vals    = 5*ones(length(timestamps))
+            real_ts = TimeSeries("teste", timestamps, vals)
+            scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
 
-        @test scen_forecast_metrics.interval_width[1][0.95] == 0
-        @test scen_forecast_metrics.interval_width[1][0.85] == 0
-        @test scen_forecast_metrics.interval_width[1][0.75] == 0
-        @test scen_forecast_metrics.interval_width[1][0.05] == 0
+            @test scen_forecast_metrics.crps[1] == 0.85
+            @test scen_forecast_metrics.crps[end] == 0.85
+            @test TimeSeriesInterface.approx(scen_forecast_metrics.percentage_crps[1], 0.17)
+            @test TimeSeriesInterface.approx(scen_forecast_metrics.percentage_crps[end], 0.17)
+            
+            timestamps              = collect(DateTime(2000):Hour(1):DateTime(2000, 2, 1))
+            scenarios               = vcat([100*ones(100)' for i in 1:length(timestamps)]...)
+            quantiles_probabilities = [0.05; 0.95]
+            quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities,        quantiles)
+        
+            vals    = 100*ones(length(timestamps))
+            real_ts = TimeSeries("teste", timestamps, vals)
+            scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
+
+            @test scen_forecast_metrics.crps[1] == 0
+            @test scen_forecast_metrics.crps[end] == 0
+            @test scen_forecast_metrics.percentage_crps[1] == 0
+            @test scen_forecast_metrics.percentage_crps[end] == 0
+
+            vals    = 75*ones(length(timestamps))
+            real_ts = TimeSeries("teste", timestamps, vals)
+            scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
+
+            @test scen_forecast_metrics.crps[1] == 25
+            @test scen_forecast_metrics.crps[end] == 25
+            @test scen_forecast_metrics.percentage_crps[1] == 1/3
+            @test scen_forecast_metrics.percentage_crps[end] == 1/3
+
+        end
     end
 end
 

@@ -137,6 +137,8 @@ end
 struct ScenariosForecastMetrics{T <: Real}
     probabilistic_calibration::Vector{Dict{Float64, Bool}}
     interval_width::Vector{Dict{Float64, Float64}}
+    crps::Vector{Float64}
+    percentage_crps::Vector{Float64}
 end
 
 function forecast_metrics(scenarios_forecast::ScenariosForecast{T}, 
@@ -148,9 +150,14 @@ function forecast_metrics(scenarios_forecast::ScenariosForecast{T},
 
     probabilistic_calibration = evaluate_probabilistic_calibration(scenarios_forecast.scenarios, real_ts.vals)
     interval_width            = evaluate_interval_width(scenarios_forecast.scenarios)
+    crps                      = evaluate_crps(scenarios_forecast.scenarios, real_ts.vals)
+    percentage_crps           = evaluate_percentage_crps(scenarios_forecast.scenarios, real_ts.vals)
+
     return ScenariosForecastMetrics{T}(
         probabilistic_calibration,
-        interval_width
+        interval_width,
+        crps,
+        percentage_crps
     )
 end
 
@@ -198,6 +205,40 @@ function evaluate_interval_width(scenarios::Matrix{T}) where T
     return interval_width
 end
 
+discrete_crps_indicator_function(val::T, z::T) where T = Float64(val < z)
+
+function crps(scenarios::Vector{T}, val::T) where T 
+    m = length(scenarios)
+    
+    return (1/m)*sum(abs(scenarios[i] - val) for i = 1:m) - (1/(2*m^2))*sum(sum(abs(scenarios[i]-scenarios[j]) for i = 1:m) for j = 1:m)
+end
+
+function crps_fast(scenarios::Vector{T}, val::T) where T 
+    scenarios = sort(scenarios)
+    m = length(scenarios)
+    
+    return (2/m^2)*sum((scenarios[i] - val)*(m*discrete_crps_indicator_function(val, scenarios[i]) - i + 1/2) for i = 1:m)
+end
+
+function evaluate_crps(scenarios::Matrix{T}, vals::Vector{T}) where T
+    crps_scores = Vector{Float64}(undef, length(vals))
+
+    for k = 1:length(vals)
+        crps_scores[k] = abs(crps_fast(scenarios[k,:], vals[k]))
+    end
+
+    return crps_scores
+end
+
+function evaluate_percentage_crps(scenarios::Matrix{T}, vals::Vector{T}) where T
+    percentage_crps_scores = Vector{Float64}(undef, length(vals))
+
+    for k = 1:length(vals)
+        percentage_crps_scores[k] = abs(crps_fast(scenarios[k,:], vals[k])/vals[k])
+    end
+
+    return percentage_crps_scores
+end
 
 """
     QuantilesForecast
