@@ -2,7 +2,7 @@ module TimeSeriesInterface
 
 import Base: +, - , *
 
-using Dates
+using Dates, Statistics
 
 include("timeseries.jl")
 include("forecast.jl")
