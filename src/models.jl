@@ -46,7 +46,7 @@ mutable struct Deterministic{T} <: ModelInput
             throw(ErrorException("exogenous_forecast timestamps must have the same length as steps ahead."))
         end
         # Test if dependent and exogenous have the same timestaamps
-        if has_exogenous_variable && !assert_two_vectors_time_series_timestamps(dependent[1], exogenous[1])
+        if has_exogenous_variable && (!assert_two_vectors_time_series_timestamps(dependent[1], exogenous[1]))
             throw(DimensionMismatch("exogenous and dependent timestamps must be the same."))
         end
         # Test if exogenous_forecast timestamps are greater than dependent timestamps
