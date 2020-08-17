@@ -235,6 +235,65 @@ function evaluate_crps(scenarios::Matrix{T}, vals::Vector{T}) where T
 end
 
 
+function mean_of_metrics(forecast::Vector{ScenariosForecastMetrics})
+    # TODO assert all forecast metrics have the same length.
+    mean_of_probabilistic_calibration = mean_probabilistic_calibration(forecast)
+    mean_of_interval_width = mean_interval_width(forecast)
+    mean_of_crps = mean_crps(forecast)
+    return mean_of_probabilistic_calibration,
+        mean_of_interval_width,
+        mean_of_crps
+end
+
+function mean_probabilistic_calibration(forecast::Vector{ScenariosForecastMetrics})
+    m_probabilistic_calibrations = Vector{Dict{Float64, Float64}}(
+                                                undef, 
+                                                length(forecast[1].probabilistic_calibration)
+                                                )
+    for forec in forecast
+        for t in 1:length(m_probabilistic_calibrations)
+            m_probabilistic_calibrations[t] = Dict{Float64, Float64}()
+            for (k, v) in forec.probabilistic_calibration[t]
+                if !haskey(m_probabilistic_calibrations[t], k)
+                    m_probabilistic_calibrations[t][k] = v/length(forecast)
+                else
+                    m_probabilistic_calibrations[t][k] += v/length(forecast)
+                end
+            end
+        end
+    end
+    return m_probabilistic_calibrations
+end
+
+function mean_interval_width(forecast::Vector{ScenariosForecastMetrics})
+    m_interval_width = Vector{Dict{Float64, Float64}}(
+                                                undef, 
+                                                length(forecast[1].interval_width)
+                                                )
+    for forec in forecast
+        for t in 1:length(m_interval_width)
+            m_interval_width[t] = Dict{Float64, Float64}()
+            for (k, v) in forec.interval_width[t]
+                if !haskey(m_interval_width[t], k)
+                    m_interval_width[t][k] = v/length(forecast)
+                else
+                    m_interval_width[t][k] += v/length(forecast)
+                end
+            end
+        end
+    end
+    return m_interval_width
+end
+
+function mean_crps(forecast::Vector{ScenariosForecastMetrics})
+    m_crps = Matrix{Float64}(undef, length(forecast[1].crps), length(forecast))
+    for (i, forec) in enumerate(forecast)
+        m_crps[:, i] = forec.crps
+    end
+    return vec(mean(m_crps, dims = 2))
+end
+
+
 """
     QuantilesForecast
 

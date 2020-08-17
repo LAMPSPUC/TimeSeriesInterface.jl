@@ -175,7 +175,7 @@ end
             scenarios               = vcat([collect(0.0:100)' for i in 1:length(timestamps)]...)
             quantiles_probabilities = [0.05; 0.95]
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
-            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities,        quantiles)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
         
             vals    = 50*ones(length(timestamps))
@@ -207,7 +207,7 @@ end
             scenarios               = vcat([collect(1.0:10)' for i in 1:length(timestamps)]...)
             quantiles_probabilities = [0.05; 0.95]
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
-            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities,        quantiles)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
         
             vals    = 5*ones(length(timestamps))
@@ -222,7 +222,7 @@ end
             scenarios               = vcat([100 * ones(100)' for i in 1:length(timestamps)]...)
             quantiles_probabilities = [0.05; 0.95]
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
-            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities,        quantiles)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
         
             vals    = 100*ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
@@ -245,7 +245,7 @@ end
             scenarios               = vcat([sample for i in 1:length(timestamps)]...)
             quantiles_probabilities = [0.05; 0.95]
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
-            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities,        quantiles)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
             vals    = 0*ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
@@ -259,7 +259,7 @@ end
             scenarios               = vcat([sample for i in 1:length(timestamps)]...)
             quantiles_probabilities = [0.05; 0.95]
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
-            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities,        quantiles)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
             vals    = 0*ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
@@ -280,7 +280,7 @@ end
             scenarios               = vcat([sample for i in 1:length(timestamps)]...)
             quantiles_probabilities = [0.05; 0.95]
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
-            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities,        quantiles)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
             vals    = 0*ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
@@ -295,7 +295,21 @@ end
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
             
             @test scen_forecast_metrics.crps[1] ≈ 1.733258 atol = 1e-5
+        end
+        @testset "mean_of_metrics" begin
+            timestamps              = collect(DateTime(2000):Year(1):DateTime(2001))
+            scenarios               = vcat([collect(1.0:10)' for i in 1:length(timestamps)]...)
+            quantiles_probabilities = [0.05; 0.95]
+            quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
+            scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
+            real_ts                 = TimeSeries("teste", timestamps, [5.0; 5.0])
+            metrics                 = forecast_metrics(scenarios_forecast, real_ts)
 
+            mean_of_probabilistic_calibration,
+            mean_of_interval_width,
+            mean_of_crps = TimeSeriesInterface.mean_of_metrics([metrics; metrics])
+
+            @test mean_of_crps == [0.85; 0.85]
         end
     end
 end
