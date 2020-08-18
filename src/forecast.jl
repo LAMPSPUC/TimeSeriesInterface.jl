@@ -250,9 +250,11 @@ function mean_probabilistic_calibration(forecast::Vector{ScenariosForecastMetric
                                                 undef, 
                                                 length(forecast[1].probabilistic_calibration)
                                                 )
-    for forec in forecast
+    for (f, forec) in enumerate(forecast)
         for t in 1:length(m_probabilistic_calibrations)
-            m_probabilistic_calibrations[t] = Dict{Float64, Float64}()
+            if f ==1
+                m_probabilistic_calibrations[t] = Dict{Float64, Float64}()
+            end
             for (k, v) in forec.probabilistic_calibration[t]
                 if !haskey(m_probabilistic_calibrations[t], k)
                     m_probabilistic_calibrations[t][k] = v/length(forecast)
