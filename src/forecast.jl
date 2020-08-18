@@ -272,9 +272,11 @@ function mean_interval_width(forecast::Vector{ScenariosForecastMetrics})
                                                 undef, 
                                                 length(forecast[1].interval_width)
                                                 )
-    for forec in forecast
+    for (f, forec) in enumerate(forecast)
         for t in 1:length(m_interval_width)
-            m_interval_width[t] = Dict{Float64, Float64}()
+            if f == 1
+                m_interval_width[t] = Dict{Float64, Float64}()
+            end
             for (k, v) in forec.interval_width[t]
                 if !haskey(m_interval_width[t], k)
                     m_interval_width[t][k] = v/length(forecast)
