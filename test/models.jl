@@ -52,13 +52,6 @@
         timestamps = collect(DateTime(2012):Year(1):DateTime(2016))
         vals       = rand(5)
         exogenous_forecast3 = TimeSeries(name, timestamps, vals)
-        
-        # # Test if there is the key steps_ahead in parameters.
-        # parameters = parameters2
-        # dependent = [dependent1, dependent1]
-        # exogenous = [exogenous1, exogenous1]
-        # exogenous_forecast = [exogenous_forecast1, exogenous_forecast1]
-        # @test_throws ErrorException Deterministic(parameters, dependent, exogenous, exogenous_forecast)
 
         # Test if the dependent vector is empty.
         parameters = parameters1
@@ -102,13 +95,6 @@
         exogenous = [exogenous1, exogenous1]
         exogenous_forecast = [exogenous_forecast1, exogenous_forecast2]
         @test_throws DimensionMismatch Deterministic(parameters, dependent, exogenous, exogenous_forecast)
-
-        # # Test if all the exogenous forecast timestamps has length equal to steps ahead
-        # parameters = parameters3
-        # dependent = [dependent1]
-        # exogenous = [exogenous1]
-        # exogenous_forecast = [exogenous_forecast1]
-        # @test_throws ErrorException Deterministic(parameters, dependent, exogenous, exogenous_forecast)
 
         # Test if dependent and exogenous have the same timestaamps
         parameters = parameters1
