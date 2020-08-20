@@ -49,6 +49,28 @@ mutable struct FitInput{T}
 end
 
 """
+FitResult(hyperparameters,
+            other)
+
+May be developed specifically for each model.
+Ideally all the essential information that flows from fit to simulate should be in the hyperparameters.
+"""
+mutable struct FitResult
+    hyperparameters
+    other
+
+    function FitResult(hyperparameters,
+                        other)
+        return new(hyperparameters, other)
+    end
+end
+
+# Additional constructor for FitResult
+function FitResult(hyperparameters)
+    return FitResult(hyperparameters, nothing)
+end
+
+"""
 SimulateInput(fit_input::FitInput{T}
                 timestamps_forecast::Vector{DateTime}
                 exogenous_forecast::Vector{TimeSeries{T}}
@@ -64,9 +86,9 @@ mutable struct SimulateInput{T}
     exogenous_forecast::Vector{TimeSeries{T}}
     fit_result::FitResult
 
-    function SimulateInput(fit_input::FitInput{T}
-                            timestamps_forecast::Vector{DateTime}
-                            exogenous_forecast::Vector{TimeSeries{T}}
+    function SimulateInput(fit_input::FitInput{T},
+                            timestamps_forecast::Vector{DateTime},
+                            exogenous_forecast::Vector{TimeSeries{T}},
                             fit_result::FitResult) where T
         
         # Having parameters, dependent and exogenous here makes possible to perform all the tests
@@ -108,11 +130,10 @@ mutable struct SimulateInput{T}
         if has_exogenous_variable && (!all([isequal(timestamps_forecast, exogenous_forecast[i].timestamps) for i = 1:length(exogenous_forecast)]))
             throw(DimensionMismatch("timestamps_forecast must be equal to each exogenous_forecast.timestamps"))
         end
-        return new{T}(parameters, 
-                    dependent,
-                    exogenous,
+        return new{T}(fit_input, 
                     timestamps_forecast,
-                    exogenous_forecast)
+                    exogenous_forecast,
+                    fit_result,)
     end
 end
 
@@ -134,27 +155,4 @@ end
 
 function assert_length_time_series_timestamp(ts::TimeSeries{T}, len_timestamps::Int) where T
     return isequal(ts.timestamps, len_timestamps)
-end
-
-
-"""
-FitResult(hyperparameters,
-            other)
-
-May be developed specifically for each model.
-Ideally all the essential information that flows from fit to simulate should be in the hyperparameters.
-"""
-mutable struct FitResult
-    hyperparameters
-    other
-
-    function FitResult(hyperparameters,
-                        other)
-        return new(hyperparameters, other)
-    end
-end
-
-# Additional constructor for FitResult
-function FitResult(hyperparameters)
-    return FitResult(hyperparameters, nothing)
 end
