@@ -1,21 +1,50 @@
-export Deterministic
+export ModelInput
+export FitResult
 
-abstract type ModelInput end
+"""
+Must be developed for each model.
+This is a basic struct that can be used for quick modelling.
+"""
+mutable struct FitResult
+    hyperparameters::Vector{Float64}
+    other::Any
 
-mutable struct Deterministic{T} <: ModelInput
-    parameters::Dict{String, Any}
+    function FitResult(hyperparameters::Vector{Float64},
+                        other::Any)
+        return new(hyperparameters, other)
+    end
+end
+
+"""
+Additional constructor for FitResult, requires only the hyperparameters.
+"""
+function FitResult(hyperparameters::Vector{Float64})
+    return FitResult(hyperparameters, nothing)
+end
+
+"""
+ModelInput is the only information needed by Fit Functions
+Fit Functions will just use dependent, exogenous and parameters
+All extra information passed to the Fit Function that is not the dataset must be inside the parameters Dict.
+You can also include keys 'args' ands 'kwargs' inside the dictionary and they will be passed directly to the FitFunction
+Simulate Functions need ModelInput and also a FitResult, developed specifically for each FitFunction
+"""
+mutable struct ModelInput{T}
+    parameters::Dict{String,Any}
     dependent::Vector{TimeSeries{T}}
     exogenous::Vector{TimeSeries{T}}
+    timestamps_forecast::Vector{DateTime}
     exogenous_forecast::Vector{TimeSeries{T}}
 
-    function Deterministic(parameters::Dict{String, Any}, 
+    function ModelInput(parameters::Dict{String,Any}, 
                            dependent::Vector{TimeSeries{T}},
                            exogenous::Vector{TimeSeries{T}},
+                           timestamps_forecast::Vector{DateTime},
                            exogenous_forecast::Vector{TimeSeries{T}}) where T
         # Test if there is the key steps_ahead in parameters.
-        if !haskey(parameters, "steps_ahead")
-            throw(ErrorException("Deterministic must have steps_ahead."))
-        end
+        # if !haskey(parameters, "steps_ahead")
+        #     throw(ErrorException("Deterministic must have steps_ahead."))
+        # end
         # Test if the dependent vector is empty.
         if isempty(dependent)
             throw(ErrorException("Must have at least one dependent time series."))
@@ -42,21 +71,26 @@ mutable struct Deterministic{T} <: ModelInput
             throw(DimensionMismatch("exogenous_forecast timestamps must be the same."))
         end
         # Test if all the exogenous forecast timestamps has length equal to steps ahead
-        if has_exogenous_variable && !assert_length_time_series_timestamp(exogenous_forecast[1], parameters["steps_ahead"])
-            throw(ErrorException("exogenous_forecast timestamps must have the same length as steps ahead."))
-        end
+        # if has_exogenous_variable && !assert_length_time_series_timestamp(exogenous_forecast[1], parameters["steps_ahead"])
+        #     throw(ErrorException("exogenous_forecast timestamps must have the same length as steps ahead."))
+        # end
         # Test if dependent and exogenous have the same timestaamps
         if has_exogenous_variable && (!assert_two_vectors_time_series_timestamps(dependent[1], exogenous[1]))
             throw(DimensionMismatch("exogenous and dependent timestamps must be the same."))
         end
         # Test if exogenous_forecast timestamps are greater than dependent timestamps
-        if has_exogenous_variable && (dependent[1].timestamps[end] >= exogenous_forecast[1].timestamp[1])
-            throw(ErrorException("timestamps of exogenous forecast must be greater than"*
+        if has_exogenous_variable && (dependent[1].timestamps[end] >= exogenous_forecast[1].timestamps[1])
+            throw(ErrorException("timestamps of exogenous forecast must be greater than" *
                                  " dependent timestamps."))
+        end
+        # Test if each exogenous_forecast timestamps is equal timestamps_forecast
+        if has_exogenous_variable && (!all([isequal(timestamps_forecast, exogenous_forecast[i].timestamps) for i = 1:length(exogenous_forecast)]))
+            throw(DimensionMismatch("timestamps_forecast must be equal to each exogenous_forecast.timestamps"))
         end
         return new{T}(parameters, 
                     dependent,
                     exogenous,
+                    timestamps_forecast,
                     exogenous_forecast)
     end
 end
