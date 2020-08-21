@@ -24,7 +24,7 @@ mutable struct FitInput{T}
         if isempty(dependent)
             throw(ErrorException("Must have at least one dependent time series."))
         end
-        # Test if the exogenous vector is empty.
+        # Warn if the exogenous vector is empty.
         has_exogenous_variable = !isempty(exogenous)
         if !has_exogenous_variable
             @warn("Deterministic has no exogenous variables.")
@@ -95,36 +95,20 @@ mutable struct SimulateInput{T}
         parameters = fit_input.parameters
         dependent = fit_input.dependent
         exogenous = fit_input.exogenous
+        has_exogenous_variable = !isempty(exogenous)
 
         # Test if exogenous and exogenous_forecast have the same number of time series
         if !(length(exogenous) == length(exogenous_forecast))
             throw(ErrorException("exogenous and exogenous_forecast must have the same numbers of time_series."))
         end
-        # Test if the exogenous vector is empty.
-        has_exogenous_variable = !isempty(exogenous)
-        if !has_exogenous_variable
-            @warn("Deterministic has no exogenous variables.")
-        end
-        # Test if all the dependent have the same timestamps
-        if !assert_vector_time_series_timestamps(dependent)
-            throw(DimensionMismatch("dependent timestamps must be the same."))
-        end
-        # Test if all the exogenous have the same timestamps
-        if has_exogenous_variable && (!assert_vector_time_series_timestamps(exogenous))
-            throw(DimensionMismatch("exogenous timestamps must be the same."))
-        end
+
         # Test if all the exogenous_forecast have the same timestamps
         if has_exogenous_variable && (!assert_vector_time_series_timestamps(exogenous_forecast))
             throw(DimensionMismatch("exogenous_forecast timestamps must be the same."))
         end
-        # Test if dependent and exogenous have the same timestaamps
-        if has_exogenous_variable && (!assert_two_vectors_time_series_timestamps(dependent[1], exogenous[1]))
-            throw(DimensionMismatch("exogenous and dependent timestamps must be the same."))
-        end
-        # Test if exogenous_forecast timestamps are greater than dependent timestamps
+        # Warn if exogenous_forecast timestamps are not greater than dependent timestamps
         if has_exogenous_variable && (dependent[1].timestamps[end] >= exogenous_forecast[1].timestamps[1])
-            throw(ErrorException("timestamps of exogenous forecast must be greater than" *
-                                 " dependent timestamps."))
+            @warn("timestamps of exogenous forecast are not greater than dependent timestamps.")
         end
         # Test if each exogenous_forecast timestamps is equal timestamps_forecast
         if has_exogenous_variable && (!all([isequal(timestamps_forecast, exogenous_forecast[i].timestamps) for i = 1:length(exogenous_forecast)]))
