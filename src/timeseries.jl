@@ -4,8 +4,6 @@ export monthly_to_hourly
 
 """
     TimeSeries
-
-
 """
 struct TimeSeries{T <: Real}
     name::String
@@ -60,9 +58,9 @@ function create_ts_name_from_ts_vector(time_series_vector, string)
     new_name = ""
     for n = 1:num_of_time_series
         if n != 1
-            new_name = new_name*" "*string*" "*time_series_vector[n].name
+            new_name = new_name * " " * string * " " * time_series_vector[n].name
         else
-            new_name = new_name*time_series_vector[n].name
+            new_name = new_name * time_series_vector[n].name
         end
     end
 
@@ -109,7 +107,7 @@ end
 
 function sum_ts(time_series_vector)
 
-    new_names      = create_ts_name_from_ts_vector(time_series_vector,"+")
+    new_names      = create_ts_name_from_ts_vector(time_series_vector, "+")
     new_timestamps = union_timestamps(time_series_vector)
     new_vals       = sum_vals_from_ts_vector(time_series_vector, new_timestamps)
 
@@ -167,7 +165,7 @@ end
 
 function subtract_ts(time_series_vector)
     if length(time_series_vector) == 1
-        new_names      = "- "*time_series_vector[1].name
+        new_names      = "- " * time_series_vector[1].name
         new_timestamps = time_series_vector[1].timestamps
         new_vals       = - time_series_vector[1].vals
     else
@@ -240,7 +238,7 @@ function (*)(ts1::TimeSeries, ts2::TimeSeries...)
     return product_ts(time_series_vector)
 end
 
-function observations_close_to_zero(ts::TimeSeries; zero_threshold = 1e-8)
+function observations_close_to_zero(ts::TimeSeries; zero_threshold=1e-8)
     for v in ts.vals
         if (v <= zero_threshold) && (v >= -zero_threshold)
             return true
@@ -272,12 +270,12 @@ function monthly_to_hourly(time_series::TimeSeries)
     name = time_series.name
     timestamps = Vector{DateTime}(undef, 0)
     for m in yearmonth.(time_series.timestamps)
-        append!(timestamps, collect(firstdayofmonth(DateTime(m...)):Hour(1):(lastdayofmonth(DateTime(m...))+Hour(23))))
+        append!(timestamps, collect(firstdayofmonth(DateTime(m...)):Hour(1):(lastdayofmonth(DateTime(m...)) + Hour(23))))
     end
 
     vals = Vector{Float64}(undef, length(timestamps))
     for i = 1:length(time_series.timestamps)
-        vals[(timestamps .>= time_series.timestamps[i]) .& (timestamps .< (time_series.timestamps[i]+Month(1)))] .= time_series.vals[i]
+        vals[(timestamps .>= time_series.timestamps[i]) .& (timestamps .< (time_series.timestamps[i] + Month(1)))] .= time_series.vals[i]
     end
     return TimeSeries(name, timestamps, vals)
 end
