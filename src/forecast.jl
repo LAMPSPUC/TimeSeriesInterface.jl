@@ -250,8 +250,8 @@ function mean_probabilistic_calibration(forecast::Vector{ScenariosForecastMetric
                                                 undef, 
                                                 length(forecast[1].probabilistic_calibration)
                                                 )
-    for forec in forecast
-        for t in 1:length(m_probabilistic_calibrations)
+    for t in 1:length(m_probabilistic_calibrations)
+        for forec in forecast
             m_probabilistic_calibrations[t] = Dict{Float64, Float64}()
             for (k, v) in forec.probabilistic_calibration[t]
                 if !haskey(m_probabilistic_calibrations[t], k)
@@ -270,8 +270,8 @@ function mean_interval_width(forecast::Vector{ScenariosForecastMetrics})
                                                 undef, 
                                                 length(forecast[1].interval_width)
                                                 )
-    for forec in forecast
-        for t in 1:length(m_interval_width)
+    for t in 1:length(m_interval_width)
+        for forec in forecast
             m_interval_width[t] = Dict{Float64, Float64}()
             for (k, v) in forec.interval_width[t]
                 if !haskey(m_interval_width[t], k)
