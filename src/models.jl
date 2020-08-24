@@ -1,6 +1,7 @@
 export FitInput
 export SimulateInput
 export FitResult
+export has_exogenous
 
 """
 FitInput(parameters::Dict{String,Any}, 
@@ -46,6 +47,15 @@ mutable struct FitInput{T}
                     dependent,
                     exogenous)
     end
+end
+
+"""
+    has_exogenous(fit_input::FitInput{T}) where T
+
+Returns true if fit_input has one or more exogenous time series and false otherwise.
+"""
+function has_exogenous(fit_input::FitInput{T}) where T
+    return length(fit_input.exogenous) >= 1
 end
 
 """
@@ -119,6 +129,15 @@ mutable struct SimulateInput{T}
                     exogenous_forecast,
                     fit_result,)
     end
+end
+
+"""
+    has_exogenous(simulate_input::SimulateInput{T}) where T
+
+Returns true if simulate_input has one or more exogenous time series and false otherwise.
+"""
+function has_exogenous(simulate_input::SimulateInput{T}) where T
+    return length(simulate_input.exogenous_forecast) >= 1
 end
 
 # Assert Functions

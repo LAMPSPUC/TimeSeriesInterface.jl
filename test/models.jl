@@ -68,6 +68,19 @@
         exogenous = [exogenous2]
         @test_throws DimensionMismatch FitInput(parameters, dependent, exogenous)
 
+        # Test has_exogenous
+        parameters = parameters1
+        dependent = [dependent1]
+        exogenous = [exogenous1]
+        fit_input = FitInput(parameters, dependent, exogenous)
+        @test has_exogenous(fit_input) == true
+
+        parameters = parameters1
+        dependent = [dependent1]
+        exogenous = TimeSeries{Float64}[]
+        fit_input = FitInput(parameters, dependent, exogenous)
+        @test has_exogenous(fit_input) == false
+
     end
 
     @testset "SimulateInput" begin
@@ -160,5 +173,22 @@
         exogenous = [exogenous1]
         exogenous_forecast = [exogenous_forecast1]
         @test_throws DimensionMismatch SimulateInput(FitInput(parameters, dependent, exogenous), timestamps_forecast2, exogenous_forecast, fit_result)
+    
+        # Test has_exogenous
+        parameters = parameters1
+        dependent = [dependent1]
+        exogenous = [exogenous1]
+        exogenous_forecast = [exogenous_forecast1]
+        fit_input = FitInput(parameters, dependent, exogenous)
+        simulate_input = SimulateInput(fit_input, timestamps_forecast1, exogenous_forecast, fit_result)
+        @test has_exogenous(simulate_input) == true
+
+        parameters = parameters1
+        dependent = [dependent1]
+        exogenous = TimeSeries{Float64}[]
+        exogenous_forecast = TimeSeries{Float64}[]
+        fit_input = FitInput(parameters, dependent, exogenous)
+        simulate_input = SimulateInput(fit_input, timestamps_forecast1, exogenous_forecast, fit_result)
+        @test has_exogenous(simulate_input) == false
     end
 end
