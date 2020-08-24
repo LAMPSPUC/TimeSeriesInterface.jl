@@ -55,11 +55,7 @@ end
 Returns true if fit_input has one or more exogenous time series and false otherwise.
 """
 function has_exogenous(fit_input::FitInput{T}) where T
-    if length(fit_input.exogenous) >= 1
-        return true
-    else
-        return false
-    end
+    return length(fit_input.exogenous) >= 1
 end
 
 """
@@ -141,11 +137,7 @@ end
 Returns true if simulate_input has one or more exogenous time series and false otherwise.
 """
 function has_exogenous(simulate_input::SimulateInput{T}) where T
-    if length(simulate_input.exogenous_forecast) >= 1
-        return true
-    else
-        return false
-    end
+    return length(simulate_input.exogenous_forecast) >= 1
 end
 
 # Assert Functions
