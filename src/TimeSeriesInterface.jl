@@ -1,8 +1,10 @@
 module TimeSeriesInterface
 
-import Base: +, - , *
+import Base: +, -, *
 
-using Dates, Statistics
+using Dates
+using RecipesBase
+using Statistics
 
 include("timeseries.jl")
 include("forecast.jl")

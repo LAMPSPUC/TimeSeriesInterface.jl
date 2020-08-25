@@ -44,8 +44,8 @@ mutable struct FitInput{T}
         end
 
         return new{T}(parameters, 
-                    dependent,
-                    exogenous)
+                      dependent,
+                      exogenous)
     end
 end
 
@@ -59,8 +59,7 @@ function has_exogenous(fit_input::FitInput{T}) where T
 end
 
 """
-FitResult(hyperparameters,
-            other)
+    FitResult(hyperparameters, other)
 
 May be developed specifically for each model.
 Ideally all the essential information that flows from fit to simulate should be in the hyperparameters.
@@ -70,7 +69,7 @@ mutable struct FitResult
     other
 
     function FitResult(hyperparameters,
-                        other)
+                       other)
         return new(hyperparameters, other)
     end
 end
@@ -81,10 +80,10 @@ function FitResult(hyperparameters)
 end
 
 """
-SimulateInput(fit_input::FitInput{T}
-                timestamps_forecast::Vector{DateTime}
-                exogenous_forecast::Vector{TimeSeries{T}}
-                fit_result::FitResult)
+    SimulateInput(fit_input::FitInput{T}
+                  timestamps_forecast::Vector{DateTime}
+                  exogenous_forecast::Vector{TimeSeries{T}}
+                  fit_result::FitResult)
 
 SimulateInput is the only information needed by Simulate Functions
 FitResult may be developed specifically for each FitFunction or you can use the generic version.
@@ -97,9 +96,9 @@ mutable struct SimulateInput{T}
     fit_result::FitResult
 
     function SimulateInput(fit_input::FitInput{T},
-                            timestamps_forecast::Vector{DateTime},
-                            exogenous_forecast::Vector{TimeSeries{T}},
-                            fit_result::FitResult) where T
+                           timestamps_forecast::Vector{DateTime},
+                           exogenous_forecast::Vector{TimeSeries{T}},
+                           fit_result::FitResult) where T
         
         # Having parameters, dependent and exogenous here makes possible to perform all the tests
         parameters = fit_input.parameters
@@ -127,7 +126,7 @@ mutable struct SimulateInput{T}
         return new{T}(fit_input, 
                     timestamps_forecast,
                     exogenous_forecast,
-                    fit_result,)
+                    fit_result)
     end
 end
 
