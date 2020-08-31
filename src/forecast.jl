@@ -3,6 +3,7 @@ export PointForecast, ScenariosForecast, QuantilesForecast
 export PointForecastMetrics, ScenariosForecastMetrics
 
 export forecast_metrics
+export cross_validation
 
 abstract type Forecast end
 abstract type ProbabilisticForecast <: Forecast end
