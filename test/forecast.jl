@@ -26,7 +26,7 @@
         @test isa(point_forecast, PointForecast)
 
         timestamps = collect(DateTime(2000):Day(1):DateTime(2000, 2, 1))
-        forecast   = rand(length(timestamps))[1:end-1]
+        forecast   = rand(length(timestamps))[1:end - 1]
         @test_throws DimensionMismatch PointForecast("teste", timestamps, forecast)
 
         timestamps = [DateTime(2001); DateTime(2000, 2, 1)]
@@ -62,7 +62,7 @@
         point_forecast_metrics = forecast_metrics(point_forecast, real_ts)
         @test isnan(point_forecast_metrics.absolute_percentage_errors[1])
 
-        point_forecast = PointForecast("teste", timestamps[1:end-1], forecast[1:end-1])
+        point_forecast = PointForecast("teste", timestamps[1:end - 1], forecast[1:end - 1])
         @test_throws DimensionMismatch forecast_metrics(point_forecast, real_ts)
     end
 end
@@ -105,7 +105,7 @@ end
         @test isa(scenarios_forecast, ScenariosForecast)
 
         timestamps              = collect(DateTime(2000):Day(1):DateTime(2000, 2, 1))
-        scenarios               = rand(length(timestamps), 10)[1:end-1, :]
+        scenarios               = rand(length(timestamps), 10)[1:end - 1, :]
         quantiles_probabilities = [0.05; 0.95]
         quantiles               = rand(length(timestamps), 2)
         @test_throws DimensionMismatch ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
@@ -113,7 +113,7 @@ end
         timestamps              = collect(DateTime(2000):Day(1):DateTime(2000, 2, 1))
         scenarios               = rand(length(timestamps), 10)
         quantiles_probabilities = [0.05; 0.95]
-        quantiles               = rand(length(timestamps), 2)[1:end-1, :]
+        quantiles               = rand(length(timestamps), 2)[1:end - 1, :]
         @test_throws DimensionMismatch ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
         
         timestamps              = collect(DateTime(2000):Day(1):DateTime(2000, 2, 1))
@@ -144,7 +144,7 @@ end
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
             scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
-            vals    = 0.9*ones(length(timestamps))
+            vals    = 0.9 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
             @test scen_forecast_metrics.probabilistic_calibration[1][0.025] == true
@@ -152,7 +152,7 @@ end
             @test scen_forecast_metrics.probabilistic_calibration[end][0.025] == true
             @test scen_forecast_metrics.probabilistic_calibration[end][0.975] == true
 
-            vals    = 50*ones(length(timestamps))
+            vals    = 50 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
             @test scen_forecast_metrics.probabilistic_calibration[1][0.025] == false
@@ -164,7 +164,7 @@ end
             @test scen_forecast_metrics.probabilistic_calibration[end][0.525] == true
             @test scen_forecast_metrics.probabilistic_calibration[end][0.975] == true
 
-            real_ts = TimeSeries("teste", timestamps[1:end-1], vals[1:end-1])
+            real_ts = TimeSeries("teste", timestamps[1:end - 1], vals[1:end - 1])
             @test_throws DimensionMismatch forecast_metrics(scenarios_forecast, real_ts)
         end
 
@@ -178,14 +178,14 @@ end
             scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
         
-            vals    = 50*ones(length(timestamps))
+            vals    = 50 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
 
             @test scen_forecast_metrics.interval_width[1][0.95] == 95
             @test scen_forecast_metrics.interval_width[1][0.85] == 85
             @test scen_forecast_metrics.interval_width[1][0.75] == 75
-            @test scen_forecast_metrics.interval_width[1][0.05] == 5
+            @test isapprox(scen_forecast_metrics.interval_width[1][0.05], 5, atol=1e-8)
             
 
             scenarios_forecast = ScenariosForecast("teste", 
@@ -210,13 +210,13 @@ end
             scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
         
-            vals    = 5*ones(length(timestamps))
+            vals    = 5 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
 
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
 
-            @test scen_forecast_metrics.crps[1] == 0.85
-            @test scen_forecast_metrics.crps[end] == 0.85
+            @test isapprox(scen_forecast_metrics.crps[1], 0.85, atol=1e-8)
+            @test isapprox(scen_forecast_metrics.crps[end], 0.85, atol=1e-8)
             
             timestamps              = collect(DateTime(2000):Hour(1):DateTime(2000, 1, 1, 24))
             scenarios               = vcat([100 * ones(100)' for i in 1:length(timestamps)]...)
@@ -224,7 +224,7 @@ end
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
             scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
         
-            vals    = 100*ones(length(timestamps))
+            vals    = 100 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
 
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
@@ -232,7 +232,7 @@ end
             @test scen_forecast_metrics.crps[1] == 0
             @test scen_forecast_metrics.crps[end] == 0
 
-            vals    = 75*ones(length(timestamps))
+            vals    = 75 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
 
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
@@ -247,7 +247,7 @@ end
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
             scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
-            vals    = 0*ones(length(timestamps))
+            vals    = 0 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
 
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
@@ -261,14 +261,14 @@ end
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
             scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
-            vals    = 0*ones(length(timestamps))
+            vals    = 0 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
             
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
             
             @test scen_forecast_metrics.crps[1] ≈ 0.3051423 atol = 1e-5
 
-            vals    = 2*ones(length(timestamps))
+            vals    = 2 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
             
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
@@ -282,14 +282,14 @@ end
             quantiles               = TimeSeriesInterface.get_quantiles(quantiles_probabilities, scenarios)
             scenarios_forecast      = ScenariosForecast("teste", timestamps, scenarios, quantiles_probabilities, quantiles)
 
-            vals    = 0*ones(length(timestamps))
+            vals    = 0 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
             
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
             
             @test scen_forecast_metrics.crps[1] ≈ 0.2197104 atol = 1e-5
 
-            vals    = 2*ones(length(timestamps))
+            vals    = 2 * ones(length(timestamps))
             real_ts = TimeSeries("teste", timestamps, vals)
             
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
@@ -348,7 +348,7 @@ end
 
         timestamps              = collect(DateTime(2000):Day(1):DateTime(2000, 2, 1))
         quantiles_probabilities = [0.05; 0.95]
-        quantiles               = rand(length(timestamps), 2)[1:end-1, :]
+        quantiles               = rand(length(timestamps), 2)[1:end - 1, :]
         @test_throws DimensionMismatch QuantilesForecast("teste", timestamps, quantiles_probabilities, quantiles)
         
         timestamps              = collect(DateTime(2000):Day(1):DateTime(2000, 2, 1))
