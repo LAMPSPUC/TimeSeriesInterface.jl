@@ -182,10 +182,10 @@ end
             real_ts = TimeSeries("teste", timestamps, vals)
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
 
-            @test scen_forecast_metrics.interval_width[1][0.95] == 95
-            @test scen_forecast_metrics.interval_width[1][0.85] == 85
-            @test scen_forecast_metrics.interval_width[1][0.75] == 75
-            @test isapprox(scen_forecast_metrics.interval_width[1][0.05], 5, atol=1e-8)
+            @test scen_forecast_metrics.interval_width[1][0.95] ≈ 95 atol = 1e-8
+            @test scen_forecast_metrics.interval_width[1][0.85] ≈ 85 atol = 1e-8
+            @test scen_forecast_metrics.interval_width[1][0.75] ≈ 75 atol = 1e-8
+            @test scen_forecast_metrics.interval_width[1][0.05] ≈ 5  atol = 1e-8
             
 
             scenarios_forecast = ScenariosForecast("teste", 
@@ -196,10 +196,10 @@ end
             
             scen_forecast_metrics = forecast_metrics(scenarios_forecast, real_ts)
 
-            @test scen_forecast_metrics.interval_width[1][0.95] == 0
-            @test scen_forecast_metrics.interval_width[1][0.85] == 0
-            @test scen_forecast_metrics.interval_width[1][0.75] == 0
-            @test scen_forecast_metrics.interval_width[1][0.05] == 0
+            @test scen_forecast_metrics.interval_width[1][0.95] ≈ 0 atol = 1e-8
+            @test scen_forecast_metrics.interval_width[1][0.85] ≈ 0 atol = 1e-8
+            @test scen_forecast_metrics.interval_width[1][0.75] ≈ 0 atol = 1e-8
+            @test scen_forecast_metrics.interval_width[1][0.05] ≈ 0 atol = 1e-8
         end
 
         @testset "crps" begin
