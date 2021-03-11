@@ -43,13 +43,6 @@
         exogenous = [exogenous1, exogenous1]
         @test_throws ErrorException FitInput(parameters, dependent, exogenous)
            
-        # Warn if the exogenous vector is empty.
-        parameters = parameters1
-        dependent = [dependent1]
-        exogenous = TimeSeries{Float64}[]
-        warn_msg = "Deterministic has no exogenous variables."
-        @test_logs (:warn, warn_msg) FitInput(parameters, dependent, exogenous)
-
         # Test if all the dependent have the same timestamps
         parameters = parameters1
         dependent = [dependent1, dependent2]

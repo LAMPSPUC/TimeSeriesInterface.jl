@@ -27,9 +27,6 @@ mutable struct FitInput{T}
         end
         # Warn if the exogenous vector is empty.
         has_exogenous_variable = !isempty(exogenous)
-        if !has_exogenous_variable
-            @warn("Deterministic has no exogenous variables.")
-        end
         # Test if all the dependent have the same timestamps
         if !assert_vector_time_series_timestamps(dependent)
             throw(DimensionMismatch("dependent timestamps must be the same."))
